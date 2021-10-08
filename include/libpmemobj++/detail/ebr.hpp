@@ -118,6 +118,7 @@ private:
 /**
  * Default and only ebr constructor.
  */
+inline
 ebr::ebr() : global_epoch(0)
 {
 #if LIBPMEMOBJ_CPP_VG_HELGRIND_ENABLED
@@ -136,7 +137,7 @@ ebr::ebr() : global_epoch(0)
  *
  * @return new registered worker.
  */
-ebr::worker
+inline ebr::worker
 ebr::register_worker()
 {
 	std::lock_guard<std::mutex> lock(mtx);
@@ -161,7 +162,7 @@ ebr::register_worker()
  * @return true if a new epoch is announced and false if it wasn't possible in
  * the current state.
  */
-bool
+inline bool
 ebr::sync()
 {
 	auto current_epoch = global_epoch.load();
@@ -191,7 +192,7 @@ ebr::sync()
  * synchronisation routine completes and returns. Note: the synchronisation may
  * take across multiple epochs.
  */
-void
+inline void
 ebr::full_sync()
 {
 	size_t syncs_cnt = 0;
@@ -210,7 +211,7 @@ ebr::full_sync()
  *
  * @return the epoch where objects can be staged for reclamation.
  */
-size_t
+inline size_t
 ebr::staging_epoch()
 {
 	auto res = global_epoch.load();
@@ -227,7 +228,7 @@ ebr::staging_epoch()
  *
  * @return the epoch available for reclamation.
  */
-size_t
+inline size_t
 ebr::gc_epoch()
 {
 	auto res = (global_epoch.load() + 1) % EPOCHS_NUMBER;
@@ -236,6 +237,7 @@ ebr::gc_epoch()
 	return res;
 }
 
+inline
 ebr::worker::worker(ebr *e_, reference ref) : local_epoch(ref), e(e_)
 {
 #if LIBPMEMOBJ_CPP_VG_HELGRIND_ENABLED
@@ -247,6 +249,7 @@ ebr::worker::worker(ebr *e_, reference ref) : local_epoch(ref), e(e_)
  * Unregisters the worker from the list of the workers in the ebr. All workers
  * should be destroyed before the destruction of ebr object.
  */
+inline
 ebr::worker::~worker()
 {
 	std::lock_guard<std::mutex> lock(e->mtx);
