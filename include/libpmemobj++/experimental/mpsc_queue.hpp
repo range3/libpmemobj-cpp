@@ -198,6 +198,7 @@ public:
  * @param[in] max_workers maximum number of workers which may be added to
  * mpsc_queue at the same time.
  */
+inline
 mpsc_queue::mpsc_queue(pmem_log_type &pmem, size_t max_workers)
 {
 	pop = pmem::obj::pool_by_vptr(&pmem);
@@ -218,7 +219,7 @@ mpsc_queue::mpsc_queue(pmem_log_type &pmem, size_t max_workers)
 	restore_offsets();
 }
 
-ptrdiff_t
+inline ptrdiff_t
 mpsc_queue::worker::acquire_cachelines(size_t len)
 {
 	assert(len % pmem::detail::CACHELINE_SIZE == 0);
@@ -231,13 +232,13 @@ mpsc_queue::worker::acquire_cachelines(size_t len)
 	return ret * static_cast<ptrdiff_t>(pmem::detail::CACHELINE_SIZE);
 }
 
-void
+inline void
 mpsc_queue::worker::produce_cachelines()
 {
 	ringbuf_produce(queue->ring_buffer.get(), w);
 }
 
-size_t
+inline size_t
 mpsc_queue::consume_cachelines(size_t *offset)
 {
 	auto ret = ringbuf_consume(ring_buffer.get(), offset);
@@ -249,14 +250,14 @@ mpsc_queue::consume_cachelines(size_t *offset)
 	return 0;
 }
 
-void
+inline void
 mpsc_queue::release_cachelines(size_t len)
 {
 	assert(len % pmem::detail::CACHELINE_SIZE == 0);
 	ringbuf_release(ring_buffer.get(), len / pmem::detail::CACHELINE_SIZE);
 }
 
-void
+inline void
 mpsc_queue::restore_offsets()
 {
 	/* Invariant */
@@ -328,6 +329,7 @@ mpsc_queue::restore_offsets()
  *
  * @param size size of the log in bytes
  */
+inline
 mpsc_queue::pmem_log_type::pmem_log_type(size_t size)
     : data_(size, 0), written(0)
 {
@@ -670,6 +672,7 @@ mpsc_queue::batch_type::end() const
 	return end_;
 }
 
+inline
 mpsc_queue::iterator::iterator(char *data, char *end) : data(data), end(end)
 {
 	auto b = reinterpret_cast<first_block *>(data);
@@ -678,7 +681,7 @@ mpsc_queue::iterator::iterator(char *data, char *end) : data(data), end(end)
 	this->data = reinterpret_cast<char *>(next);
 }
 
-void
+inline void
 mpsc_queue::clear_cachelines(first_block *block, size_t size)
 {
 	assert(size % pmem::detail::CACHELINE_SIZE == 0);
@@ -698,7 +701,7 @@ mpsc_queue::clear_cachelines(first_block *block, size_t size)
 	assert(end <= reinterpret_cast<first_block *>(buf + buf_size));
 }
 
-mpsc_queue::iterator &
+inline mpsc_queue::iterator &
 mpsc_queue::iterator::operator++()
 {
 	auto block = reinterpret_cast<first_block *>(data);
@@ -719,25 +722,26 @@ mpsc_queue::iterator::operator++()
 	return *this;
 }
 
-bool
+inline bool
 mpsc_queue::iterator::operator==(const mpsc_queue::iterator &rhs) const
 {
 	return data == rhs.data;
 }
 
-bool
+inline bool
 mpsc_queue::iterator::operator!=(const mpsc_queue::iterator &rhs) const
 {
 	return data != rhs.data;
 }
 
+inline
 pmem::obj::string_view mpsc_queue::iterator::operator*() const
 {
 	auto b = reinterpret_cast<first_block *>(data);
 	return pmem::obj::string_view(b->data, b->size);
 }
 
-mpsc_queue::first_block *
+inline mpsc_queue::first_block *
 mpsc_queue::iterator::seek_next(mpsc_queue::first_block *b)
 {
 	auto e = reinterpret_cast<first_block *>(end);
